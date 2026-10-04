@@ -14,8 +14,8 @@ class IncidentService:
     """Handles emergency incident reporting, queries, and status updates."""
 
     def generate_tracking_code(self) -> str:
-        """Generates human-readable tracking code e.g. EMG-2026-8491."""
-        return f"EMG-2026-{random.randint(1000, 9999)}"
+        """Generates human-readable, collision-safe tracking code e.g. EMG-2026-A1B2C3D4."""
+        return f"EMG-2026-{uuid4().hex[:8].upper()}"
 
     async def create_incident(
         self, 

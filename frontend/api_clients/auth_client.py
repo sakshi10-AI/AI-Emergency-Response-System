@@ -5,6 +5,7 @@ Encapsulates user authentication, registration, token refresh, and session verif
 with the FastAPI backend.
 """
 
+import time
 from typing import Optional, Dict, Any
 from frontend.api_clients.base_client import base_api_client, BaseAPIClient, APIConnectionError
 from utils.logger import app_logger
@@ -65,11 +66,14 @@ class AuthenticationClient:
 
     async def register(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Registers a new user or dispatcher account."""
+        payload = dict(user_data)
+        if "name" in payload and "full_name" not in payload:
+            payload["full_name"] = payload.pop("name")
         try:
             return await self.client._request_async(
                 method="POST",
                 endpoint="/api/v1/auth/register",
-                json_data=user_data,
+                json_data=payload,
                 use_cache=False
             )
         except APIConnectionError:

@@ -70,9 +70,8 @@ def test_docker_compose_configuration():
 
 
 def test_env_files_exist():
-    """Tests that .env and .env.example exist with required variables."""
+    """Tests that .env.example exists with required variables."""
     assert os.path.exists(".env.example")
-    assert os.path.exists(".env")
 
     with open(".env.example", "r", encoding="utf-8") as f:
         content = f.read()

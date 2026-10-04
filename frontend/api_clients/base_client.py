@@ -185,6 +185,14 @@ class BaseAPIClient:
         cache_ttl: Optional[int] = None
     ) -> Any:
         """Synchronous wrapper executing _request_async safely in event loop."""
+        req_coro = self._request_async(
+            method=method,
+            endpoint=endpoint,
+            params=params,
+            json_data=json_data,
+            use_cache=use_cache,
+            cache_ttl=cache_ttl
+        )
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
@@ -193,17 +201,20 @@ class BaseAPIClient:
                 with concurrent.futures.ThreadPoolExecutor() as pool:
                     future = pool.submit(
                         asyncio.run,
-                        self._request_async(method, endpoint, params, json_data, use_cache, cache_ttl)
+                        self._request_async(
+                            method=method,
+                            endpoint=endpoint,
+                            params=params,
+                            json_data=json_data,
+                            use_cache=use_cache,
+                            cache_ttl=cache_ttl
+                        )
                     )
                     return future.result()
             else:
-                return loop.run_until_complete(
-                    self._request_async(method, endpoint, params, json_data, use_cache, cache_ttl)
-                )
+                return loop.run_until_complete(req_coro)
         except RuntimeError:
-            return asyncio.run(
-                self._request_async(method, endpoint, params, json_data, use_cache, cache_ttl)
-            )
+            return asyncio.run(req_coro)
 
 
 # Global Base Client Instance

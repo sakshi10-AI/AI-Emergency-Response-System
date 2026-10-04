@@ -17,6 +17,7 @@ Supported Capabilities:
 import json
 import time
 import hashlib
+import asyncio
 from typing import Type, TypeVar, Optional, Dict, Any, AsyncGenerator
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -130,10 +131,14 @@ class GeminiLLMWrapper:
         app_logger.info(f"[GeminiLLMWrapper] Invoking Gemini model '{target_model}' (temp={temperature})...")
         start_time = time.time()
 
-        response = self.client.models.generate_content(
-            model=target_model,
-            contents=prompt,
-            config=config
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: self.client.models.generate_content(
+                model=target_model,
+                contents=prompt,
+                config=config
+            )
         )
 
         elapsed = time.time() - start_time
