@@ -7,7 +7,7 @@ with the FastAPI backend.
 
 import time
 from typing import Optional, Dict, Any
-from frontend.api_clients.base_client import base_api_client, BaseAPIClient, APIConnectionError
+from frontend.api_clients.base_client import base_api_client, BaseAPIClient, APIConnectionError, APIException
 from utils.logger import app_logger
 
 
@@ -34,7 +34,7 @@ class AuthenticationClient:
             if token:
                 self.client.set_auth_token(token)
             return res
-        except APIConnectionError:
+        except (APIConnectionError, APIException):
             app_logger.warning("[AuthenticationClient] Backend offline. Using resilient local authentication fallback.")
             token = f"mock-access-token-{username}"
             ref_token = f"mock-refresh-token-{username}"

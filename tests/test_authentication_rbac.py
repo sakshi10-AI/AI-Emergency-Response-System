@@ -102,20 +102,20 @@ async def test_require_roles_dependency():
 
 def test_streamlit_auth_guard_role_matrix():
     """Tests frontend Streamlit auth guard role permission matrix."""
-    # Admin gets all 10 pages
+    # Admin gets all 11 pages
     admin_pages = get_allowed_pages("admin")
-    assert len(admin_pages) == 10
+    assert len(admin_pages) == 11
     assert has_page_access("admin", "Settings") is True
 
-    # Dispatcher gets 9 pages (no Settings)
+    # Dispatcher gets 10 pages (no Settings)
     disp_pages = get_allowed_pages("dispatcher")
-    assert len(disp_pages) == 9
+    assert len(disp_pages) == 10
     assert has_page_access("dispatcher", "Settings") is False
     assert has_page_access("dispatcher", "Dashboard") is True
 
-    # Police gets 8 pages
+    # Police gets 9 pages
     police_pages = get_allowed_pages("police")
-    assert len(police_pages) == 8
+    assert len(police_pages) == 9
     assert has_page_access("police", "Hospital Dashboard") is False
     assert has_page_access("police", "Live Camera") is True
 

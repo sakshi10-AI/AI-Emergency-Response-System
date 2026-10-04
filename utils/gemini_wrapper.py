@@ -224,6 +224,45 @@ class GeminiLLMWrapper:
 
         return parsed_dict
 
+    async def generate_vision_json(
+        self,
+        image_bytes: bytes,
+        prompt: str,
+        system_instruction: Optional[str] = None,
+        mime_type: str = "image/jpeg",
+        temperature: float = 0.2,
+        model_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Invokes Gemini Multimodal Vision API on raw image bytes.
+        Returns parsed JSON dictionary with vision analysis results.
+        """
+        if not self.client:
+            raise AgentExecutionError("Gemini client uninitialized or API key not configured.")
+
+        target_model = model_name or self.default_model
+        config = types.GenerateContentConfig(
+            system_instruction=system_instruction,
+            response_mime_type="application/json",
+            temperature=temperature
+        )
+
+        image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+        contents = [image_part, prompt]
+
+        app_logger.info(f"[GeminiLLMWrapper] Invoking Gemini Vision model '{target_model}' (bytes={len(image_bytes)})...")
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: self.client.models.generate_content(
+                model=target_model,
+                contents=contents,
+                config=config
+            )
+        )
+
+        return json.loads(response.text)
+
     async def generate_text(
         self,
         prompt: str,

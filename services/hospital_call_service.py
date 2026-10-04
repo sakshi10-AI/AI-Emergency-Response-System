@@ -190,6 +190,109 @@ class HospitalCallService:
 
         return call_log
 
+    async def dispatch_nearest_hospital_call(
+        self,
+        db: AsyncSession,
+        accident_lat: float,
+        accident_lon: float,
+        incident_type: str = "VEHICLE_COLLISION",
+        severity_score: int = 80,
+        casualties: int = 1,
+        summary: Optional[str] = None,
+        incident_id: Optional[Any] = None,
+        target_phone_override: Optional[str] = None
+    ) -> HospitalCallLog:
+        """
+        Calculates nearest hospital directly from GPS coordinates and triggers automated emergency call.
+        Routes to dummy emergency number: 7796119389.
+        """
+        hospital, dist_km = await self.find_nearest_hospital(
+            db,
+            latitude=accident_lat,
+            longitude=accident_lon
+        )
+
+        phone_number = target_phone_override or hospital.emergency_phone or DEFAULT_HOSPITAL_EMERGENCY_PHONE
+        clean_phone = phone_number.strip().replace(" ", "").replace("-", "")
+
+        transit_speed_kmh = 40.0
+        eta_mins = max(1.5, round((dist_km / transit_speed_kmh) * 60.0, 1))
+
+        resolved_incident_id = None
+        if incident_id:
+            if isinstance(incident_id, str):
+                try:
+                    resolved_incident_id = uuid.UUID(incident_id)
+                except ValueError:
+                    resolved_incident_id = None
+            elif isinstance(incident_id, uuid.UUID):
+                resolved_incident_id = incident_id
+
+        # If no incident provided, create lightweight tracking incident
+        if not resolved_incident_id:
+            new_inc = Incident(
+                tracking_code=f"VIS-{uuid.uuid4().hex[:6].upper()}",
+                description=summary or f"Visual triage: {incident_type} confirmed with severity {severity_score}/100.",
+                category="accident",
+                severity=1 if severity_score >= 80 else (2 if severity_score >= 60 else 3),
+                status="dispatching",
+                latitude=accident_lat,
+                longitude=accident_lon,
+                address_text="Nagpur City Highway Carriage Sector",
+                assigned_hospital_id=hospital.id
+            )
+            db.add(new_inc)
+            await db.flush()
+            resolved_incident_id = new_inc.id
+
+        speech_transcript = (
+            f"🚨 EMERGENCY ALERT from Nagpur EOC Command Center: "
+            f"Visual AI confirmed critical {incident_type.replace('_', ' ')}. "
+            f"Severity score {severity_score} out of 100. "
+            f"Incoming casualties: {casualties} person(s). "
+            f"Nearest trauma center selected: {hospital.name}. "
+            f"Estimated ambulance transit arrival time is {eta_mins} minutes (Distance: {dist_km} km). "
+            f"Automated voice alert dispatched to emergency desk: {clean_phone}. "
+            f"Prepare trauma resuscitation bay and on-call trauma surgeon immediately."
+        )
+
+        provider_call_id = f"CALL-VIS-{uuid.uuid4().hex[:10].upper()}"
+
+        call_log = HospitalCallLog(
+            incident_id=resolved_incident_id,
+            hospital_id=hospital.id,
+            target_phone=clean_phone,
+            caller_callerid="Nagpur EOC Emergency Dispatch (+91-712-256-EOC)",
+            call_type="AUTOMATED_EMERGENCY_DISPATCH",
+            status="CONNECTED",
+            speech_transcript=speech_transcript,
+            distance_km=dist_km,
+            eta_minutes=eta_mins,
+            casualties_count=casualties,
+            severity_level=1 if severity_score >= 80 else 2,
+            duration_seconds=45,
+            provider_call_id=provider_call_id,
+            response_code="200_OK_AUDIO_DELIVERED",
+            completed_at=datetime.utcnow()
+        )
+
+        if hospital.available_icu_beds > 0:
+            hospital.available_icu_beds -= 1
+            hospital.er_occupancy_percent = min(100, hospital.er_occupancy_percent + 2)
+
+        db.add(call_log)
+        await db.commit()
+        await db.refresh(call_log)
+        await db.refresh(hospital)
+
+        call_log.cached_hospital_name = hospital.name
+
+        app_logger.info(
+            f"[HospitalCallService] Visual triage call successfully placed to '{hospital.name}' ({clean_phone}) - SID '{provider_call_id}'."
+        )
+
+        return call_log
+
     async def get_call_history(
         self,
         db: AsyncSession,

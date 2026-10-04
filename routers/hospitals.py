@@ -288,23 +288,32 @@ async def get_hospital_by_id(hospital_id: str, db: AsyncSession = Depends(get_db
     # Check database
     try:
         import uuid as uuid_mod
-        h_uuid = uuid_mod.UUID(hospital_id)
-        hospital = await hospital_call_service.get_hospital_by_id(db, h_uuid)
-        return {
-            "id": str(hospital.id),
-            "hospital_id": hospital.code,
-            "code": hospital.code,
-            "name": hospital.name,
-            "emergency_phone": hospital.emergency_phone,
-            "trauma_level": hospital.trauma_level,
-            "address": hospital.address,
-            "city": hospital.city,
-            "latitude": hospital.latitude,
-            "longitude": hospital.longitude,
-            "total_icu_beds": hospital.total_icu_beds,
-            "available_icu_beds": hospital.available_icu_beds,
-            "status": hospital.status
-        }
+        from sqlalchemy import or_
+        from models.hospital import Hospital
+        try:
+            h_uuid = uuid_mod.UUID(hospital_id)
+            query = select(Hospital).where(or_(Hospital.id == h_uuid, Hospital.code == hospital_id))
+        except ValueError:
+            query = select(Hospital).where(Hospital.code == hospital_id)
+
+        res = await db.execute(query)
+        hospital = res.scalars().first()
+        if hospital:
+            return {
+                "id": str(hospital.id),
+                "hospital_id": hospital.code,
+                "code": hospital.code,
+                "name": hospital.name,
+                "emergency_phone": hospital.emergency_phone,
+                "trauma_level": hospital.trauma_level,
+                "address": hospital.address,
+                "city": hospital.city,
+                "latitude": hospital.latitude,
+                "longitude": hospital.longitude,
+                "total_icu_beds": hospital.total_icu_beds,
+                "available_icu_beds": hospital.available_icu_beds,
+                "status": hospital.status
+            }
     except Exception:
         pass
 
@@ -325,6 +334,36 @@ async def reserve_icu_bed(hospital_id: str, db: AsyncSession = Depends(get_db)):
                 "hospital_id": hospital_id,
                 "available_icu_beds": h["available_icu_beds"]
             }
+
+    # Check database
+    try:
+        import uuid as uuid_mod
+        from sqlalchemy import or_
+        from models.hospital import Hospital
+        try:
+            h_uuid = uuid_mod.UUID(hospital_id)
+            query = select(Hospital).where(or_(Hospital.id == h_uuid, Hospital.code == hospital_id))
+        except ValueError:
+            query = select(Hospital).where(Hospital.code == hospital_id)
+
+        res = await db.execute(query)
+        hospital = res.scalars().first()
+        if hospital:
+            if hospital.available_icu_beds <= 0:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No ICU beds available.")
+            hospital.available_icu_beds -= 1
+            await db.commit()
+            await db.refresh(hospital)
+            return {
+                "status": "success",
+                "message": f"Reserved ICU bed at {hospital.name}.",
+                "hospital_id": hospital.code,
+                "available_icu_beds": hospital.available_icu_beds
+            }
+    except HTTPException:
+        raise
+    except Exception:
+        pass
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Hospital '{hospital_id}' not found.")
 

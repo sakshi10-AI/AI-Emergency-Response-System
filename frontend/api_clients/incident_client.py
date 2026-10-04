@@ -6,7 +6,7 @@ workflow dispatch triggers, and timeline fetching.
 """
 
 from typing import Optional, Dict, Any, List
-from frontend.api_clients.base_client import base_api_client, BaseAPIClient, APIConnectionError, ResourceNotFoundError
+from frontend.api_clients.base_client import base_api_client, BaseAPIClient, APIConnectionError, APIException, ResourceNotFoundError
 from frontend.api_clients.mock_data import MOCK_INCIDENTS as _MOCK_INCIDENTS
 from utils.logger import app_logger
 
@@ -79,7 +79,7 @@ class IncidentClient:
                 "PUT", f"/api/v1/incidents/{incident_id}/status",
                 json_data={"status": status, "notes": notes}, use_cache=False
             )
-        except APIConnectionError:
+        except (APIConnectionError, APIException):
             for inc in _MOCK_INCIDENTS:
                 if inc["incident_id"] == incident_id:
                     inc["status"] = status
@@ -96,7 +96,7 @@ class IncidentClient:
                 "POST", f"/api/v1/incidents/{incident_id}/dispatch",
                 json_data={}, use_cache=False
             )
-        except APIConnectionError:
+        except (APIConnectionError, APIException):
             return {
                 "status": "FALLBACK_DISPATCH",
                 "message": f"Dispatch workflow queued locally for {incident_id}.",

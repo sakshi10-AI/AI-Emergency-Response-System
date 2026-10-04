@@ -16,7 +16,7 @@ from middleware.error_handler import (
     validation_exception_handler,
     global_exception_handler
 )
-from routers import auth, incidents, units, health, agents_router, hospitals, reports, notifications, websockets
+from routers import auth, incidents, units, health, agents_router, hospitals, reports, notifications, websockets, vision_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -55,5 +55,6 @@ app.include_router(reports.router)
 app.include_router(notifications.router)
 app.include_router(agents_router.router)
 app.include_router(websockets.router)
+app.include_router(vision_router.router)
 
 
