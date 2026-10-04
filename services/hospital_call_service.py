@@ -9,7 +9,7 @@ and logs call telemetry into PostgreSQL database.
 import math
 import uuid
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Tuple, List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
@@ -169,7 +169,7 @@ class HospitalCallService:
             duration_seconds=42, # Realistic emergency alert duration
             provider_call_id=provider_call_id,
             response_code="200_OK_AUDIO_DELIVERED",
-            completed_at=datetime.utcnow()
+            completed_at=datetime.now(timezone.utc)
         )
 
         # 8. Associate Hospital with Incident & Reserve Capacity
@@ -273,7 +273,7 @@ class HospitalCallService:
             duration_seconds=45,
             provider_call_id=provider_call_id,
             response_code="200_OK_AUDIO_DELIVERED",
-            completed_at=datetime.utcnow()
+            completed_at=datetime.now(timezone.utc)
         )
 
         if hospital.available_icu_beds > 0:

@@ -335,13 +335,36 @@ def render_webcam_analysis_view():
                                     "hazard":    top.label.upper(),
                                     "priority":  priority,
                                     "unit":      "NMC-AMB-101",
-                                    "hospital":  "GMCH Nagpur",
+                                    "hospital":  "GMCH Nagpur (7796119389)",
                                     "eta":       "4.2 min",
                                     "confidence": f"{top.confidence*100:.1f}%"
                                 }
                                 st.session_state.dispatch_log.insert(0, log_entry)
                                 st.session_state.incident_dispatched = True
                                 st.toast(f"🚨 Dispatched to {inc_id}!", icon="🚑")
+
+                                # Trigger automated emergency phone alert to 7796119389
+                                try:
+                                    import asyncio
+                                    from database.connection import AsyncSessionLocal
+                                    from services.hospital_call_service import hospital_call_service
+
+                                    async def _call():
+                                        async with AsyncSessionLocal() as db:
+                                            return await hospital_call_service.dispatch_nearest_hospital_call(
+                                                db=db,
+                                                accident_lat=21.1458,
+                                                accident_lon=79.0882,
+                                                incident_type=top.label.upper(),
+                                                severity_score=90 if priority == "CRITICAL" else 75,
+                                                casualties=1,
+                                                summary=f"Webcam AI detected live hazard: {top.label.upper()}",
+                                                target_phone_override="7796119389"
+                                            )
+                                    call_log = asyncio.run(_call())
+                                    st.toast("📞 Hospital Call Dispatched to 7796119389!", icon="📞")
+                                except Exception:
+                                    pass
                         with col_d2:
                             if st.button("🔕 Acknowledge", use_container_width=True,
                                          key=f"ack_{st.session_state.frames_analysed}"):

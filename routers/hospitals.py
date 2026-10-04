@@ -108,6 +108,25 @@ _DEFAULT_NAGPUR_HOSPITALS = [
         "specialties": ["Advanced Trauma Resuscitation", "Neurosurgery", "Toxicology"],
         "distance_km": 11.2,
         "status": "OPEN"
+    },
+    {
+        "hospital_id": "HOSP-05",
+        "code": "HOSP-NGP-05",
+        "name": "Lata Mangeshkar Hospital Nagpur",
+        "emergency_phone": "7796119389",
+        "trauma_level": "Level II",
+        "address": "Digdoh Hills, Hingna Road, Nagpur, Maharashtra 440019",
+        "city": "Nagpur",
+        "latitude": 21.1030,
+        "longitude": 78.9950,
+        "total_icu_beds": 35,
+        "available_icu_beds": 9,
+        "total_emergency_beds": 70,
+        "available_emergency_beds": 18,
+        "er_occupancy_percent": 74,
+        "specialties": ["Cardiac Surgery", "Emergency Medicine", "Neurosurgery"],
+        "distance_km": 6.8,
+        "status": "OPEN"
     }
 ]
 

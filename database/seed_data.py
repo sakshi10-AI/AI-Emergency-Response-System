@@ -18,7 +18,7 @@ or
 import sys
 import asyncio
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # Ensure project root is on sys.path
@@ -344,7 +344,7 @@ async def seed_database(force_reseed: bool = False):
             duration_seconds=46,
             provider_call_id="CALL-EOC-NAGPUR-7796119389",
             response_code="200_OK_AUDIO_DELIVERED",
-            completed_at=datetime.utcnow()
+            completed_at=datetime.now(timezone.utc)
         )
         session.add(call_log)
 
