@@ -42,6 +42,22 @@ def test_hospitals_endpoints():
     res_bed = client.post(f"/api/v1/hospitals/{hosp_id}/reserve-bed")
     assert res_bed.status_code in (200, 400)
 
+    # Test call history endpoint
+    res_calls = client.get("/api/v1/hospitals/calls/history")
+    assert res_calls.status_code == 200
+    assert isinstance(res_calls.json(), list)
+
+    # Test dispatch-call endpoint with phone 7796119389
+    call_payload = {
+        "incident_id": "00000000-0000-0000-0000-000000000001",
+        "target_phone": "7796119389"
+    }
+    res_dispatch_call = client.post("/api/v1/hospitals/dispatch-call", json=call_payload)
+    assert res_dispatch_call.status_code == 200
+    call_data = res_dispatch_call.json()
+    assert call_data["status"] == "CALL_DISPATCHED"
+    assert call_data["target_phone"] == "7796119389"
+
 
 def test_reports_endpoints():
     """Tests /api/v1/reports/ endpoints."""

@@ -21,10 +21,13 @@ class Incident(Base):
     address_text = Column(Text, nullable=True)
     triage_summary = Column(Text, nullable=True)
     threat_assessment = Column(Text, nullable=True)
+    assigned_hospital_id = Column(UUID(as_uuid=True), ForeignKey("hospitals.id", ondelete="SET NULL"), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     reporter = relationship("User", back_populates="incidents")
+    assigned_hospital = relationship("Hospital", back_populates="incidents")
     dispatches = relationship("DispatchAssignment", back_populates="incident", cascade="all, delete-orphan")
     alerts = relationship("PublicAlert", back_populates="incident")
+    call_logs = relationship("HospitalCallLog", back_populates="incident", cascade="all, delete-orphan")
