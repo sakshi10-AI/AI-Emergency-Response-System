@@ -1,6 +1,8 @@
 """
 User Domain & CRUD Service
 """
+from typing import Any
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from models.user import User
@@ -14,6 +16,16 @@ class UserService:
     async def get_by_email(self, db: AsyncSession, email: str) -> User | None:
         """Fetch user record by email address."""
         result = await db.execute(select(User).where(User.email == email))
+        return result.scalars().first()
+
+    async def get_user_by_id(self, db: AsyncSession, user_id: str | Any) -> User | None:
+        """Fetch user record by UUID or UUID string."""
+        import uuid
+        try:
+            uid = uuid.UUID(str(user_id)) if not isinstance(user_id, uuid.UUID) else user_id
+        except (ValueError, TypeError, AttributeError):
+            return None
+        result = await db.execute(select(User).where(User.id == uid))
         return result.scalars().first()
 
     async def create_user(self, db: AsyncSession, user_in: UserCreate) -> User:

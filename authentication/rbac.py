@@ -25,7 +25,9 @@ class Role(str, Enum):
     POLICE = "police"
     HOSPITAL = "hospital"
     DISPATCHER = "dispatcher"
+    RESPONDER = "responder"
     VIEWER = "viewer"
+    CITIZEN = "citizen"
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -82,6 +84,10 @@ def require_roles(allowed_roles: List[str]):
 
         # Admin role overrides all permissions
         if user_role == Role.ADMIN or user_role in allowed_lower:
+            return current_user
+
+        # Responder umbrella covers police, hospital, and dedicated responder
+        if "responder" in allowed_lower and user_role in ["police", "hospital", "responder"]:
             return current_user
 
         raise PermissionDeniedError(

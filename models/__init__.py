@@ -10,6 +10,8 @@ from models.dispatch_assignment import DispatchAssignment
 from models.alert import PublicAlert
 from models.agent_log import AgentAuditLog
 from models.report import IncidentReport
+from models.hospital import Hospital
+from models.hospital_call_log import HospitalCallLog
 
 __all__ = [
     "User",
@@ -18,5 +20,7 @@ __all__ = [
     "DispatchAssignment",
     "PublicAlert",
     "AgentAuditLog",
-    "IncidentReport"
+    "IncidentReport",
+    "Hospital",
+    "HospitalCallLog"
 ]

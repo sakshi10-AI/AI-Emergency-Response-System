@@ -12,6 +12,8 @@ from config.settings import settings
 router = APIRouter(tags=["Health"])
 
 @router.get("/health", status_code=status.HTTP_200_OK, summary="Basic health check endpoint")
+@router.get("/api/v1/health", status_code=status.HTTP_200_OK, summary="API v1 health check endpoint", include_in_schema=False)
+@router.get("/api/v1/health/", status_code=status.HTTP_200_OK, summary="API v1 trailing slash health check", include_in_schema=False)
 async def health_check():
     """Simple status check endpoint."""
     return {

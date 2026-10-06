@@ -107,7 +107,7 @@ def render_login_view():
                     reg_res = loop.run_until_complete(auth_client.register({
                         "email": reg_email,
                         "password": reg_pass,
-                        "name": reg_name,
+                        "full_name": reg_name,
                         "role": reg_role.lower()
                     }))
 

@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from utils.exceptions import CustomAppException
 from utils.logger import app_logger
-from datetime import datetime
+from datetime import datetime, timezone
 
 async def custom_app_exception_handler(request: Request, exc: CustomAppException):
     """Handler for domain-specific application exceptions."""
@@ -20,7 +20,7 @@ async def custom_app_exception_handler(request: Request, exc: CustomAppException
             "error_code": exc.error_code,
             "message": exc.message,
             "details": exc.details,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )
 
@@ -34,7 +34,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "error_code": "VALIDATION_ERROR",
             "message": "Invalid request parameters or body payload.",
             "details": exc.errors(),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )
 
@@ -48,6 +48,6 @@ async def global_exception_handler(request: Request, exc: Exception):
             "error_code": "INTERNAL_SERVER_ERROR",
             "message": "An internal server error occurred. Please contact system administrator.",
             "details": {},
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )

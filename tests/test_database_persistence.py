@@ -20,7 +20,9 @@ from models import (
     DispatchAssignment,
     PublicAlert,
     AgentAuditLog,
-    IncidentReport
+    IncidentReport,
+    Hospital,
+    HospitalCallLog
 )
 
 
@@ -137,3 +139,48 @@ def test_incident_report_model_instantiation():
     assert report.id == rep_id
     assert report.incident_id == "INC-8821"
     assert report.metrics_data["sla_compliance_score"] == 100
+
+
+def test_hospital_model_instantiation():
+    """Tests Hospital SQLAlchemy model instantiation and emergency phone number."""
+    h_id = uuid.uuid4()
+    hosp = Hospital(
+        id=h_id,
+        code="HOSP-NGP-01",
+        name="GMCH Nagpur",
+        emergency_phone="7796119389",
+        trauma_level="Level I",
+        address="Medical Square, Nagpur",
+        city="Nagpur",
+        latitude=21.1367,
+        longitude=79.0995,
+        total_icu_beds=60,
+        available_icu_beds=14
+    )
+    assert hosp.id == h_id
+    assert hosp.emergency_phone == "7796119389"
+    assert hosp.trauma_level == "Level I"
+    assert hosp.city == "Nagpur"
+
+
+def test_hospital_call_log_model_instantiation():
+    """Tests HospitalCallLog SQLAlchemy model instantiation with target phone 7796119389."""
+    call_id = uuid.uuid4()
+    inc_id = uuid.uuid4()
+    h_id = uuid.uuid4()
+    call_log = HospitalCallLog(
+        id=call_id,
+        incident_id=inc_id,
+        hospital_id=h_id,
+        target_phone="7796119389",
+        call_type="AUTOMATED_EMERGENCY_DISPATCH",
+        status="CONNECTED",
+        speech_transcript="Nagpur EOC Emergency Alert: Major accident near Wardha Road.",
+        distance_km=2.1,
+        eta_minutes=4.2,
+        severity_level=1
+    )
+    assert call_log.id == call_id
+    assert call_log.target_phone == "7796119389"
+    assert call_log.status == "CONNECTED"
+    assert call_log.distance_km == 2.1

@@ -19,5 +19,5 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    incidents = relationship("Incident", back_populates="reporter", cascade="all, delete-orphan")
+    incidents = relationship("Incident", back_populates="reporter", cascade="save-update, merge")
     assigned_units = relationship("ResponderUnit", back_populates="assigned_user")

@@ -90,6 +90,7 @@ MOCK_HOSPITALS: List[Dict[str, Any]] = [
     {
         "hospital_id": "HOSP-01",
         "name": "Government Medical College & Hospital (GMCH) Nagpur",
+        "emergency_phone": "7796119389",
         "latitude": 21.1367,
         "longitude": 79.0995,
         "trauma_level": "Level I",
@@ -103,6 +104,7 @@ MOCK_HOSPITALS: List[Dict[str, Any]] = [
     {
         "hospital_id": "HOSP-02",
         "name": "Wockhardt Hospital Nagpur",
+        "emergency_phone": "7796119389",
         "latitude": 21.1571,
         "longitude": 79.0888,
         "trauma_level": "Level II",
@@ -116,6 +118,7 @@ MOCK_HOSPITALS: List[Dict[str, Any]] = [
     {
         "hospital_id": "HOSP-03",
         "name": "Orange City Hospital & Research Institute",
+        "emergency_phone": "7796119389",
         "latitude": 21.1270,
         "longitude": 79.0632,
         "trauma_level": "Level II",
@@ -129,6 +132,7 @@ MOCK_HOSPITALS: List[Dict[str, Any]] = [
     {
         "hospital_id": "HOSP-04",
         "name": "Lata Mangeshkar Hospital Nagpur",
+        "emergency_phone": "7796119389",
         "latitude": 21.1475,
         "longitude": 79.1050,
         "trauma_level": "Level II",

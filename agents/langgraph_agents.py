@@ -240,33 +240,61 @@ class VisionAgent(BaseAgent):
     def fallback_execution(self, input_data: VisionInput) -> VisionOutput:
         from vision.service import vision_detection_service
 
-        img_src = input_data.image_urls[0] if input_data.image_urls else input_data.description
-        vision_res = vision_detection_service.detect_image_sync(img_src)
+        hazards = []
+        fire = False
+        desc_lower = input_data.description.lower()
+        scene_summary = ""
+        victim_count = 0
+        vehicle_count = 0
 
-        hazards = [
-            VisualHazard(
-                hazard_type=h.hazard_type,
-                severity_level=h.risk_tier,
-                confidence=h.confidence,
-                location_in_scene=h.description
-            )
-            for h in vision_res.hazard_alerts
-        ]
+        if input_data.image_urls:
+            img_src = input_data.image_urls[0]
+            try:
+                import asyncio
+                from vision.vlm_analyzer import vlm_analyzer
+                vlm_res = asyncio.run(vlm_analyzer.analyze_image_async(img_src, prompt_hint=input_data.description))
+                hazards = [
+                    VisualHazard(
+                        hazard_type=b.category.upper(),
+                        severity_level=vlm_res.severity_level,
+                        confidence=b.confidence,
+                        location_in_scene=b.label
+                    )
+                    for b in vlm_res.bounding_boxes
+                ]
+                fire = vlm_res.fire_detected
+                victim_count = vlm_res.victims_count_est
+                vehicle_count = vlm_res.vehicles_involved_count
+                scene_summary = vlm_res.scene_summary
+            except Exception:
+                vision_res = vision_detection_service.detect_image_sync(img_src)
+                hazards = [
+                    VisualHazard(
+                        hazard_type=h.hazard_type,
+                        severity_level=h.risk_tier,
+                        confidence=h.confidence,
+                        location_in_scene=h.description
+                    )
+                    for h in vision_res.hazard_alerts
+                ]
+                fire = vision_res.fire_detected
+                victim_count = vision_res.victim_count
+                vehicle_count = vision_res.vehicle_count
+                scene_summary = vision_res.scene_summary
 
         if not hazards:
             hazards_data = AgentTools.analyze_image_hazards(input_data.image_urls, input_data.description)
             hazards = [VisualHazard(**h) for h in hazards_data]
 
-        desc_lower = input_data.description.lower()
-        fire = vision_res.fire_detected or "fire" in desc_lower or "smoke" in desc_lower
+        fire = fire or "fire" in desc_lower or "smoke" in desc_lower
 
         return VisionOutput(
             detected_hazards=hazards,
-            victims_visible_count=max(vision_res.victim_count, 2 if "injured" in desc_lower or "casualty" in desc_lower else 0),
-            vehicles_involved_count=max(vision_res.vehicle_count, 2 if "car" in desc_lower or "crash" in desc_lower else 0),
+            victims_visible_count=max(victim_count, 2 if "injured" in desc_lower or "casualty" in desc_lower else 0),
+            vehicles_involved_count=max(vehicle_count, 2 if "car" in desc_lower or "crash" in desc_lower else 0),
             fire_or_smoke_detected=fire,
             structural_damage_detected="collapse" in desc_lower or "building" in desc_lower,
-            scene_summary=vision_res.scene_summary or f"Visual scene analysis: {len(hazards)} hazards identified."
+            scene_summary=scene_summary or f"Visual scene analysis: {len(hazards)} hazards identified."
         )
 
 
